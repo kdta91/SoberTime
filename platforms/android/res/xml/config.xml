@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.sobertime.treatmentcenters" version="1.6.0" versionCode="1.6" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://grassroots.org">
+    <preference name="loglevel" value="DEBUG" />
+    <preference name="AndroidLaunchMode" value="singleTop" />
+    <feature name="App">
+        <param name="android-package" value="org.apache.cordova.App" />
+    </feature>
+    <feature name="NetworkStatus">
+        <param name="android-package" value="org.apache.cordova.networkinformation.NetworkManager" />
+    </feature>
+    <feature name="Notification">
+        <param name="android-package" value="org.apache.cordova.dialogs.Notification" />
+    </feature>
+    <name>Sobertime Treatment Centers</name>
+    <description>
+        Database of Treatment Shelters
+    </description>
+    <author email="val@grassroots.org" href="http://grassroots.org">
+        Grassroots.org
+    </author>
+    <icon src="www/img/logo.png" />
+    <preference name="SplashScreen" value="screen" />
+    <preference name="SplashScreenDelay" value="2000" />
+    <content src="index.html" />
+    <access origin="*" />
+</widget>

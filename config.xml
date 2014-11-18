@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.sobertime.treatmentcenters" versionCode="1.6" version="1.6.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://grassroots.org">
+    <name>Sobertime Treatment Centers</name>
+    <description>
+        Database of Treatment Shelters
+    </description>
+    <author email="val@grassroots.org" href="http://grassroots.org">
+        Grassroots.org
+    </author>
+    <icon src="www/img/logo.png"/>
+    <preference name="SplashScreen" value="screen" />
+    <preference name="SplashScreenDelay" value="2000" />
+    <content src="index.html" />
+    <access origin="*" />
+</widget>

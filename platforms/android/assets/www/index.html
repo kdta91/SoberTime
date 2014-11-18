@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="user-scalable=yes, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <title>Treatment Centers</title>
+        <link rel="stylesheet" href="css/themes/sobertime.min.css" />
+        <link rel="stylesheet" href="css/themes/jquery.mobile.icons.min.css"/>
+        <link rel="stylesheet" href="css/jquery.mobile.structure-1.4.3.min.css"/>
+        <link href="js/usmap/css/fonts.css" rel="stylesheet" type="text/css"/>
+        <link href="js/usmap/css/map.css" rel="stylesheet" type="text/css"/>
+        <link href="css/jPages.css" rel="stylesheet" type="text/css"/>
+        <script src="js/jquery-1.11.1.min.js"></script>
+        <script src="js/jquery.mobile-1.4.3.min.js"></script>
+        <script src="js/usmap/js/raphael.js" type="text/javascript"></script>
+        <script src="js/usmap/js/scale.raphael.js" type="text/javascript"></script>
+        <script src="js/usmap/js/paths.js" type="text/javascript"></script>
+        <script src="js/usmap/js/init.js" type="text/javascript"></script>
+        <script src="js/searchFilter.js" type="text/javascript"></script>
+        <script src="js/jPages.js" type="text/javascript"></script>
+        <script src="js/index.js" type="text/javascript"></script>
+        <script src="cordova.js" type="text/javascript"></script>
+        <script src="cordova_plugins.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            function onLoad() {
+                document.addEventListener("deviceready", onDeviceReady, false);
+            }
+
+            function onDeviceReady() {
+                document.addEventListener("offline", function() { 
+                    navigator.notification.alert("Check your connection and try again.", function() { location.reload(); }, 'Warning', 'Retry'); 
+                }, false);
+            }
+
+            $(document).on("pagebeforeshow", "#page_home", function() {
+                $.mobile.loading('show');
+                $('#shelter_search').keydown(function(event){
+                    if(event.keyCode == 13) {
+                        window.open("#page_keyword", "_self");
+                    }
+                });
+                $('#btn_shelter_search').click(function(){
+                    window.open("#page_keyword", "_self");
+                });
+            });
+
+            $(document).on("pagebeforeshow", "#page_keyword", function() {
+                var address, phone, services, html, kword = $('#shelter_search').val();
+
+                $('#sMap').attr('src', '').attr('width', '').attr('height', '').attr('frameborder', '');
+                    
+                $.get('http://sobertime.com/sobertime_app/data_query.php', { kword : kword }, function(data) {
+                    html = '<ul>';
+                    $.each(data, function(i){
+                        address = data[i]['a']['address'];
+                        phone = data[i]['a']['phone2'];
+                        if (address != "" || address != null || address != "N/A") {
+                            address = data[i]['a']['formatted_address'];
+                        }
+                        if (phone != "" || phone != null || phone != "N/A") {
+                            phone = data[i]['a']['phone1'];
+                        }
+                        services = data[i]['a']['service1']+'. '+data[i]['a']['service2']+'. '+data[i]['a']['service3']+'. '+data[i]['a']['service4']+'. '+data[i]['a']['service5'];
+                        html += '<li><a href="#page_shelter?sName='+encodeURIComponent(data[i]['a']['org_name'])+'&sAddress='+encodeURIComponent(address)+'&sPhone='+phone+'&sUrl='+encodeURIComponent(data[i]['a']['website'])+'&sServices='+encodeURIComponent(services)+'&sPcode='+data[i]['a']['zip']+'&sState='+data[i]['a']['state']+'&sEin='+data[i]['a']['ein']+'&sParticipation='+data[i]['a']['guidestar_participation']+'" target="_self"><h2>'+data[i]['a']['org_name']+'</h2><p>'+address+'</p></a></li>';
+                        $('#count_kword').html('About '+data[i]['b']+' returned results for keyword: "'+kword+'"');
+                    });
+                    html += '</ul>';
+
+                    var $content = $("#keyword_result");
+                    $content.html(html);
+                    var $ul = $content.find("ul");
+                    $ul.listview({inset:true});
+                }, 'json');
+            });
+
+            $(document).on("pagebeforeshow", "#page_state", function() {
+                var address, phone, html, state = getUrlParameters().state;
+
+                $('.state').text(state);
+                $('#sMap').attr('src', '').attr('width', '').attr('height', '').attr('frameborder', '');
+                
+                $.get('http://sobertime.com/sobertime_app/data_query.php', { state : state }, function(data) {
+                    $('#shelters_search').hide();
+                    $('#shelters').show();
+                    html = '<ul id="centers_list">';
+                    $.each(data, function(i){
+                        console.log(data[i]['a']);
+                        address = data[i]['a']['address'];
+                        phone = data[i]['a']['phone2'];
+                        if (address != "" || address != null || address != "N/A") {
+                            address = data[i]['a']['formatted_address'];
+                        }
+                        if (phone != "" || phone != null || phone != "N/A") {
+                            phone = data[i]['a']['phone1'];
+                        }
+                        services = data[i]['a']['service1']+'. '+data[i]['a']['service2']+'. '+data[i]['a']['service3']+'. '+data[i]['a']['service4']+'. '+data[i]['a']['service5'];
+                        html += '<li><a href="#page_shelter?sName='+encodeURIComponent(data[i]['a']['org_name'])+'&sAddress='+encodeURIComponent(address)+'&sPhone='+phone+'&sUrl='+encodeURIComponent(data[i]['a']['website'])+'&sServices='+encodeURIComponent(services)+'&sPcode='+data[i]['a']['zip']+'&sState='+data[i]['a']['state']+'&sEin='+data[i]['a']['ein']+'&sParticipation='+data[i]['a']['guidestar_participation']+'" target="_self"><h2>'+data[i]['a']['org_name']+'</h2><p>'+address+'</p></a></li>';
+                        $('#count_kword').html(data[i]['b']+' Treatment Centers found');
+                    });
+                    html += '</ul>';
+
+                    var $content = $("#shelters");
+                    $content.html(html);
+                    var $ul = $content.find("ul");
+                    $ul.listview({autodividers:false, inset:true});
+
+                    $('.holder').jPages({
+                        containerID : "centers_list",
+                        perPage : 100
+                    });
+
+                    $('.jp-previous').attr('class', 'ui-btn ui-icon-arrow-l ui-btn-icon-left ui-shadow ui-corner-all');
+                    $('.jp-next').attr('class', 'ui-btn ui-icon-arrow-r ui-btn-icon-right ui-shadow ui-corner-all');
+                }, 'json');
+
+                $("#filter").searchFilter({ targetSelector: "#shelters li", charCount: 2});
+                $("#filter").change(function(){
+                   if ($(this).val() == "") $("#shelters li").show();
+                });
+
+                $('#btn_search').click(function(){
+                    var address, phone, html, name = $('#name_search').val();
+                
+                    $('#shelters').hide();
+                    $('#shelters_search').show();
+                    $('#sMap').attr('src', '').attr('width', '').attr('height', '').attr('frameborder', '');
+
+                    $.post('http://sobertime.com/sobertime_app/data_query.php', { name : name, state : state }, function(data) {
+                        html = '<ul>';
+                    $.each(data, function(i){
+                        address = data[i]['a']['address'];
+                        phone = data[i]['a']['phone2'];
+                        if (address != "" || address != null || address != "N/A") {
+                            address = data[i]['a']['formatted_address'];
+                        }
+                        if (phone != "" || phone != null || phone != "N/A") {
+                            phone = data[i]['a']['phone1'];
+                        }
+                        services = data[i]['a']['service1']+'. '+data[i]['a']['service2']+'. '+data[i]['a']['service3']+'. '+data[i]['a']['service4']+'. '+data[i]['a']['service5'];
+                        html += '<li><a href="#page_shelter?sName='+encodeURIComponent(data[i]['a']['org_name'])+'&sAddress='+encodeURIComponent(address)+'&sPhone='+phone+'&sUrl='+encodeURIComponent(data[i]['a']['website'])+'&sServices='+encodeURIComponent(services)+'&sPcode='+data[i]['a']['zip']+'&sState='+data[i]['a']['state']+'&sEin='+data[i]['a']['ein']+'&sParticipation='+data[i]['a']['guidestar_participation']+'" target="_self"><h2>'+data[i]['a']['org_name']+'</h2><p>'+address+'</p></a></li>';
+                        $('#count_kword').html(data[i]['b']+' Treatment Centers found');
+                    });
+                    html += '</ul>';
+
+                        var $content = $("#shelters_search");
+                        $content.html(html);
+                        var $ul = $content.find("ul");
+                        $ul.listview({autodividers:false, inset:true});
+                    }, 'json');
+
+                    $("#filter").searchFilter({ targetSelector: "#shelters_search li", charCount: 2});
+                    $("#filter").change(function(){
+                       if ($(this).val() == "") $("#shelters_search li").show();
+                    });
+                });
+            });
+
+            $(document).on("pagebeforeshow", "#page_shelter", function() {
+                $(".shelter_name").html(decodeURIComponent(getUrlParameters().sName));
+                if (getUrlParameters().sPhone != "") {
+                    $("#sPhone").html("<p><b>Phone: </b>"+getUrlParameters().sPhone+"<br/>");
+                } else { $("#sPhone").html(""); }
+                if (getUrlParameters().sUrl != "") {
+                    $("#sUrl").html("<p><b>Website: </b><a href='http://"+decodeURIComponent(getUrlParameters().sUrl)+"' target='_blank'>"+decodeURIComponent(getUrlParameters().sUrl)+"</a><br/>");
+                } else { $("#sUrl").html(""); }
+                if (getUrlParameters().sPcode != "") {
+                    $("#sPcode").html("<p><b>Postal Code: </b>"+getUrlParameters().sPcode+"<br/>");
+                } else { $("#sPcode").html(""); }
+                if (getUrlParameters().sState != "") {
+                    $("#sState").html("<p><b>State: </b>"+getUrlParameters().sState+"<br/>");
+                } else { $("#sState").html(""); }
+                if (getUrlParameters().sAddress != "") {
+                    $("#sMap").attr('src','https://www.google.com/maps/embed/v1/place?key=AIzaSyBDtxieKrQwBJ5HSwDH-M55qFw6sJmn_9s&q='+getUrlParameters().sAddress).attr('width','100%').attr('height','350px').attr('frameborder', '0');
+                    $("#sAddress").html("<p><b>Address: </b>"+decodeURIComponent(getUrlParameters().sAddress+"<br/>"));
+                } else { $("#sAddress").html(""); }
+                if (getUrlParameters().sServices != "") {
+                    $("#sServices").html("<p><b>Services: </b>"+decodeURIComponent(getUrlParameters().sServices)+"<br/>");
+                } else { $("#sServices").html(""); }
+                if (getUrlParameters().sEin != "") {
+                    $("#sEin").html("<p><b>EIN: </b>"+decodeURIComponent(getUrlParameters().sEin)+"<br/>");
+                } else { $("#sEin").html(""); }
+                if (getUrlParameters().sParticipation != "") {
+                    $("#sParticipation").html("<p><b>GuideStar.org Participation: </b>"+decodeURIComponent(getUrlParameters().sParticipation)+"<br/>");
+                } else { $("#sParticipation").html(""); }
+            });
+
+            function getUrlParameters() {
+                var vars = [], hash;
+                var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+                
+                for(var i = 0; i < hashes.length; i++)
+                {
+                    hash = hashes[i].split('=');
+                    vars.push(hash[0]);
+                    vars[hash[0]] = hash[1];
+                }
+                return vars;
+            }
+        </script>
+        <style>
+            h1 {
+                font-weight:normal;
+            }
+
+            .shelter_name {
+                color: #DE560C;
+            }
+
+            body {
+                font-size: 1.2em;
+                font-weight: normal; 
+            }
+
+            .ui-header .ui-btn {
+                font-size: 0.8em;
+            }
+
+            .right {
+                float: right;
+            }
+
+            .ui-header .ui-title, .ui-footer .ui-title {
+                white-space: normal;
+            }
+
+            #filter_shelters .ui-alt-icon.ui-icon-search:after, #filter_shelters .ui-alt-icon .ui-icon-search:after, #filter_shelters .ui-input-search:after {
+                background: url(img/filter.png);
+            }
+
+            #main_panel .ui-btn-icon-right:after {
+                display: none;
+            }
+
+            #page_shelter a {
+                text-decoration: none;
+            }
+        </style>
+    </head>
+    <body onload="onLoad()">
+        <div data-role="page" id="page_home" data-disable-page-zoom="false">
+            <div data-role="header" data-position="fixed">
+                <h1>Find Treatment Centers</h1>
+                <a href="#main_panel" class="ui-btn ui-icon-bars ui-btn-right ui-btn-icon-right ui-shadow ui-corner-all ui-btn-icon-notext">HOME</a>
+            </div>
+
+            <div data-role="panel" id="main_panel" data-position="right" data-display="push">
+                <ul data-role="listview">
+                    <li><a href="https://twitter.com/sobertimecom" target="_blank">Follow @sobertime_com on Twitter</a></li>
+                    <li><a href="https://www.facebook.com/sobertime" target="_blank">Follow us on Facebook</a></li>
+                    <li><a href="">Privacy Policy</a></li>
+                    <li><a href="">Terms of Service</a></li>
+                    <li><a href="">Version 1.2</a></li>
+                    <li><a href="">Thank you for downloading. Enjoy!</a></li>
+                </ul>
+            </div>
+
+            <div data-role="main" class="ui-content" style="text-align: center;">
+                <table style='width:100%'>
+                    <tr><td>
+                        <input type='search' id="shelter_search" placeholder="Find Treatment Centers"/>
+                    </td>
+                    <td style='font-size:80%; width:7em'>
+                         <input type='submit' id="btn_shelter_search" value='GO'/>
+                    </td></tr>
+                </table>
+                <h3>Find by Map</h3>
+                <div class="mapWrapper">
+                    <div id="map"></div>
+                </div>
+
+                <div id="state_list">
+                    <h3>Select the state for available treatment centers</h3>
+                    <ul data-role="listview" data-filter="true" data-input="#state_filter" data-inset="true">
+                        <li><a href="#page_state?state=Alabama" target="_self">Alabama <span class="right">AL</span></a></li>
+                        <li><a href="#page_state?state=Alaska" target="_self">Alaska <span class="right">AK</span></a></li>
+                        <li><a href="#page_state?state=Arizona" target="_self">Arizona <span class="right">AZ</span></a></li>
+                        <li><a href="#page_state?state=Arkansas" target="_self">Arkansas <span class="right">AR</span></a></li>
+                        <li><a href="#page_state?state=California" target="_self">California <span class="right">CA</span></a></li>
+                        <li><a href="#page_state?state=Colorado" target="_self">Colorado <span class="right">CO</span></a></li>
+                        <li><a href="#page_state?state=Connecticut" target="_self">Connecticut <span class="right">CT</span></a></li>
+                        <li><a href="#page_state?state=Delaware" target="_self">Delaware <span class="right">DE</span></a></li>
+                        <li><a href="#page_state?state=District Of Columbia" target="_self">District Of Columbia <span class="right">DC</span></a></li>
+                        <li><a href="#page_state?state=Federated States Of Micronesia" target="_self">Federated States Of Micronesia <span class="right">FM</span></a></li>
+                        <li><a href="#page_state?state=Florida" target="_self">Florida <span class="right">FL</span></a></li>
+                        <li><a href="#page_state?state=Georgia" target="_self">Georgia <span class="right">GA</span></a></li>
+                        <li><a href="#page_state?state=Guam" target="_self">Guam <span class="right">GU</span></a></li>
+                        <li><a href="#page_state?state=Hawaii" target="_self">Hawaii <span class="right">HI</span></a></li>
+                        <li><a href="#page_state?state=Idaho" target="_self">Idaho <span class="right">ID</span></a></li>
+                        <li><a href="#page_state?state=Illinois" target="_self">Illinois <span class="right">IL</span></a></li>
+                        <li><a href="#page_state?state=Indiana" target="_self">Indiana <span class="right">IN</span></a></li>
+                        <li><a href="#page_state?state=Iowa" target="_self" target="_self">Iowa <span class="right">IA</span></a></li>
+                        <li><a href="#page_state?state=Kansas" target="_self">Kansas <span class="right">KS</span></a></li>
+                        <li><a href="#page_state?state=Kentucky" target="_self">Kentucky <span class="right">KY</span></a></li>
+                        <li><a href="#page_state?state=Louisiana" target="_self">Louisiana <span class="right">LA</span></a></li>
+                        <li><a href="#page_state?state=Maine" target="_self">Maine <span class="right">ME</span></a></li>
+                        <li><a href="#page_state?state=Marshall Islands" target="_self">Marshall Islands <span class="right">MH</span></a></li>
+                        <li><a href="#page_state?state=Maryland" target="_self">Maryland <span class="right">MD</span></a></li>
+                        <li><a href="#page_state?state=Massachusetts" target="_self">Massachusetts <span class="right">MA</span></a></li>
+                        <li><a href="#page_state?state=Michigan" target="_self">Michigan <span class="right">MI</span></a></li>
+                        <li><a href="#page_state?state=Minnesota" target="_self">Minnesota <span class="right">MN</span></a></li>
+                        <li><a href="#page_state?state=Mississippi" target="_self">Mississippi <span class="right">MS</span></a></li>
+                        <li><a href="#page_state?state=Missouri" target="_self">Missouri <span class="right">MO</span></a></li>
+                        <li><a href="#page_state?state=Montana" target="_self">Montana <span class="right">MT</span></a></li>
+                        <li><a href="#page_state?state=Nebraska" target="_self">Nebraska <span class="right">NE</span></a></li>
+                        <li><a href="#page_state?state=Nevada" target="_self">Nevada <span class="right">NV</span></a></li>
+                        <li><a href="#page_state?state=New Hampshire" target="_self">New Hampshire <span class="right">NH</span></a></li>
+                        <li><a href="#page_state?state=New Jersey" target="_self">New Jersey <span class="right">NJ</span></a></li>
+                        <li><a href="#page_state?state=New Mexico" target="_self">New Mexico <span class="right">NM</span></a></li>
+                        <li><a href="#page_state?state=New York" target="_self">New York <span class="right">NY</span></a></li>
+                        <li><a href="#page_state?state=North Carolina" target="_self">North Carolina <span class="right">NC</span></a></li>
+                        <li><a href="#page_state?state=North Dakota" target="_self">North Dakota <span class="right">ND</span></a></li>
+                        <li><a href="#page_state?state=Northern Mariana Islands" target="_self">Northern Mariana Islands <span class="right">MP</span></a></li>
+                        <li><a href="#page_state?state=Ohio" target="_self">Ohio <span class="right">OH</span></a></li>
+                        <li><a href="#page_state?state=Oklahoma" target="_self">Oklahoma <span class="right">OK</span></a></li>
+                        <li><a href="#page_state?state=Oregon" target="_self">Oregon <span class="right">OR</span></a></li>
+                        <li><a href="#page_state?state=Palau" target="_self">Palau <span class="right">PW</span></a></li>
+                        <li><a href="#page_state?state=Pennsylvania" target="_self">Pennsylvania <span class="right">PA</span></a></li>
+                        <li><a href="#page_state?state=Puerto Rico" target="_self">Puerto Rico <span class="right">PR</span></a></li>
+                        <li><a href="#page_state?state=Rhode Island" target="_self">Rhode Island <span class="right">RI</span></a></li>
+                        <li><a href="#page_state?state=South Carolina" target="_self">South Carolina <span class="right">SC</span></a></li>
+                        <li><a href="#page_state?state=South Dakota" target="_self">South Dakota <span class="right">SD</span></a></li>
+                        <li><a href="#page_state?state=Tennessee" target="_self">Tennessee <span class="right">TN</span></a></li>
+                        <li><a href="#page_state?state=Texas" target="_self">Texas <span class="right">TX</span></a></li>
+                        <li><a href="#page_state?state=Utah" target="_self">Utah <span class="right">UT</span></a></li>
+                        <li><a href="#page_state?state=Vermont" target="_self">Vermont <span class="right">VT</span></a></li>
+                        <li><a href="#page_state?state=Virgin Islands" target="_self">Virgin Islands <span class="right">VI</span></a></li>
+                        <li><a href="#page_state?state=Virginia" target="_self">Virginia <span class="right">VA</span></a></li>
+                        <li><a href="#page_state?state=Washington" target="_self">Washington <span class="right">WA</span></a></li>
+                        <li><a href="#page_state?state=West Virginia" target="_self">West Virginia <span class="right">WV</span></a></li>
+                        <li><a href="#page_state?state=Wisconsin" target="_self">Wisconsin <span class="right">WI</span></a></li>
+                        <li><a href="#page_state?state=Wyoming" target="_self">Wyoming <span class="right">WY</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="page" id="page_keyword">
+            <div data-role="header" data-position="fixed">
+                <a href="#" data-rel="back" class="ui-btn ui-icon-back ui-btn-icon-left ui-shadow ui-corner-all">BACK</a>
+                <h1 class="state">Keyword Results</h1>
+                <a href="#page_home" class="ui-btn ui-icon-home ui-btn-icon-right ui-shadow ui-corner-all">HOME</a>
+            </div>
+
+            <div data-role="main" class="ui-content">
+                <table style='width:100%'>
+                    <tr><td>
+                        <input type='search' id="keyword_search" placeholder="Find Treatment Center"/>
+                    </td>
+                    <td style='font-size:80%; width:7em'>
+                         <input type='submit' id="btn_keyword_search" value='GO'/>
+                    </td></tr>
+                </table>
+                <span id="count_kword"></span>
+                <div id="keyword_result"></div>
+            </div>
+        </div>
+
+        <div data-role="page" id="page_state">
+            <div data-role="header" data-position="fixed">
+                <a href="#" data-rel="back" class="ui-btn ui-icon-back ui-btn-icon-left ui-shadow ui-corner-all">BACK</a>
+                <h1 class="state"></h1>
+                <a href="#page_home" class="ui-btn ui-icon-home ui-btn-icon-right ui-shadow ui-corner-all">HOME</a>
+            </div>
+
+            <div data-role="main" class="ui-content">
+                <table style='width:100%'>
+                    <tr><td>
+                        <input type='search' id="name_search" placeholder="Find Treatment Center"/>
+                    </td>
+                    <td style='font-size:80%; width:7em'>
+                         <input type='submit' id="btn_search" value='GO'/>
+                    </td></tr>
+                </table>
+                <div id="filter_shelters">
+                    <input id="filter" placeholder="Filter" data-type="search">
+                </div>
+                <div id="shelters"></div>
+                <div id="shelters_search"></div>
+            </div>
+
+            <div data-role="footer" data-position="fixed">
+                <div class="holder"></div>
+            </div>
+        </div>
+        
+        <div data-role="page" id="page_shelter">
+            <div data-role="header" data-position="fixed">
+                <a href="#" data-rel="back" class="ui-btn ui-icon-back ui-btn-icon-left ui-shadow ui-corner-all">BACK</a>
+                <h1>Center Info</h1>
+                <a href="#page_home" class="ui-btn ui-icon-home ui-btn-icon-right ui-shadow ui-corner-all">HOME</a>
+            </div>
+
+            <div data-role="main" class="ui-content" style="text-align: justify;">
+                <h3 class="shelter_name"></h3>
+                <span id="sAddress"></span> </p>
+                <span id="sPhone"></span> </p>
+                <span id="sPcode"></span> </p>
+                <span id="sState"></span> </p>
+                <span id="sEin"></span> </p>
+                <span id="sParticipation"></span> </p>
+                <span id="sUrl"></span> </p>
+                <span id="sServices"></span> </p>
+                <p><b>Locate by Map:</b></p>
+                <p><iframe id="sMap"></iframe></p>
+            </div>
+        </div>
+    </body>
+</html>
